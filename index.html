@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChillDrop — Cold drinks, delivered cold</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#0B141F',
+            tangerine: '#FF5A36',
+            lime: '#C9FF4D',
+            cream: '#F3EFE2',
+            steel: '#7F92A8',
+          },
+          fontFamily: {
+            display: ['Space Grotesk', 'system-ui', 'sans-serif'],
+            body: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    :root {
+      --ink: #0B141F;
+      --tangerine: #FF5A36;
+      --lime: #C9FF4D;
+      --cream: #F3EFE2;
+      --steel: #7F92A8;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--ink);
+      color: var(--cream);
+      font-family: 'Inter', system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+    .font-display { font-family: 'Space Grotesk', system-ui, sans-serif; }
+    /* Porthole frame */
+    .porthole {
+      border-radius: 50%;
+      border: 10px solid #1a2a3a;
+      box-shadow:
+        inset 0 0 40px rgba(0,0,0,0.6),
+        0 0 0 4px #2a3a4a,
+        0 20px 60px rgba(0,0,0,0.5);
+      overflow: hidden;
+      background: radial-gradient(circle at 30% 30%, #1a2a3a 0%, #0B141F 70%);
+    }
+    /* Shelf strip */
+    .shelf-row {
+      background: linear-gradient(180deg, #15202b 0%, #0f1822 100%);
+      border-top: 3px solid #2a3a4a;
+      border-bottom: 8px solid #0a1018;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+    /* Ticket stub contact */
+    .ticket {
+      background: repeating-linear-gradient(
+        -45deg,
+        #1a2a3a,
+        #1a2a3a 10px,
+        #15202b 10px,
+        #15202b 20px
+      );
+      border: 2px dashed #3a4a5a;
+      position: relative;
+    }
+    .ticket::before,
+    .ticket::after {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: var(--ink);
+      border-radius: 50%;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .ticket::before { left: -12px; }
+    .ticket::after { right: -12px; }
+    /* Cart badge */
+    .cart-badge {
+      min-width: 18px;
+      height: 18px;
+      font-size: 11px;
+    }
+    /* Product swatch */
+    .swatch {
+      width: 48px;
+      height: 72px;
+      border-radius: 6px 6px 4px 4px;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .swatch::after {
+      content: '';
+      position: absolute;
+      top: 8%;
+      left: 10%;
+      right: 10%;
+      height: 35%;
+      background: rgba(255,255,255,0.15);
+      border-radius: 3px;
+    }
+    /* Modal */
+    .modal-backdrop {
+      background: rgba(11, 20, 31, 0.85);
+      backdrop-filter: blur(8px);
+    }
+    /* Flying item */
+    .flying-item {
+      position: fixed;
+      z-index: 9999;
+      pointer-events: none;
+      width: 40px;
+      height: 60px;
+      border-radius: 4px;
+    }
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0B141F; }
+    ::-webkit-scrollbar-thumb { background: #2a3a4a; border-radius: 4px; }
+    /* Filter pills */
+    .filter-pill.active {
+      background: var(--tangerine);
+      color: var(--ink);
+    }
+    /* Hide default canvas outline */
+    canvas { outline: none; display: block; }
+  </style>
+</head>
+<body class="antialiased">
+  <!-- Sticky Nav -->
+  <nav id="nav" class="fixed top-0 left-0 right-0 z-50 bg-ink/90 backdrop-blur-md border-b border-white/5">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <a href="#" class="font-display text-xl font-bold tracking-tight text-cream hover:text-lime transition-colors">
+        Chill<span class="text-tangerine">Drop</span>
+      </a>
+      <div class="hidden sm:flex items-center gap-8 text-sm font-medium text-steel">
+        <a href="#shelf" class="hover:text-cream transition-colors">Shelf</a>
+        <a href="#about" class="hover:text-cream transition-colors">About</a>
+        <a href="#contact" class="hover:text-cream transition-colors">Contact</a>
+      </div>
+      <button id="cart-btn" class="relative p-2 rounded-lg hover:bg-white/5 transition-colors" aria-label="Open cart">
+        <svg class="w-6 h-6 text-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+        </svg>
+        <span id="cart-count" class="cart-badge absolute -top-0.5 -right-0.5 bg-tangerine text-ink font-bold rounded-full flex items-center justify-center px-1 hidden">0</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="min-h-screen pt-20 pb-12 flex items-center">
+    <div class="max-w-6xl mx-auto px-4 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center w-full">
+      <div class="order-2 lg:order-1 space-y-6">
+        <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight">
+          Cold drinks.<br/>
+          <span class="text-tangerine">Actually cold.</span>
+        </h1>
+        <p class="text-steel text-lg max-w-md leading-relaxed">
+          One fridge. One person packing. Delivered within 3 km of Koramangala — kept at 3°C until it hits your door.
+        </p>
+        <div class="flex flex-wrap gap-3">
+          <a href="#shelf" class="inline-flex items-center gap-2 bg-tangerine text-ink font-semibold px-6 py-3 rounded-lg hover:bg-tangerine/90 transition-colors">
+            Browse the shelf
+          </a>
+          <a href="#about" class="inline-flex items-center gap-2 border border-steel/40 text-cream px-6 py-3 rounded-lg hover:border-lime/50 hover:text-lime transition-colors">
+            How it works
+          </a>
+        </div>
+        <p class="text-sm text-steel/80">Min order ₹80 · Avg delivery 28 min · Cash / UPI</p>
+      </div>
+      <div class="order-1 lg:order-2 flex justify-center">
+        <div class="porthole w-72 h-72 sm:w-80 sm:h-80 lg:w-96 lg:h-96 relative">
+          <canvas id="hero-canvas" class="w-full h-full"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Product Shelf -->
+  <section id="shelf" class="py-16">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+        <div>
+          <h2 class="font-display text-3xl font-bold">The shelf</h2>
+          <p class="text-steel mt-1">What fits in the fridge today</p>
+        </div>
+        <div id="filters" class="flex flex-wrap gap-2">
+          <button data-filter="all" class="filter-pill active px-3 py-1.5 rounded-full text-sm font-medium bg-white/10 text-cream transition-colors">All</button>
+          <button data-filter="cola" class="filter-pill px-3 py-1.5 rounded-full text-sm font-medium bg-white/5 text-steel hover:bg-white/10 transition-colors">Cola</button>
+          <button data-filter="lemon-soda" class="filter-pill px-3 py-1.5 rounded-full text-sm font-medium bg-white/5 text-steel hover:bg-white/10 transition-colors">Lemon-Soda</button>
+          <button data-filter="juice" class="filter-pill px-3 py-1.5 rounded-full text-sm font-medium bg-white/5 text-steel hover:bg-white/10 transition-colors">Juice</button>
+          <button data-filter="energy" class="filter-pill px-3 py-1.5 rounded-full text-sm font-medium bg-white/5 text-steel hover:bg-white/10 transition-colors">Energy</button>
+          <button data-filter="water" class="filter-pill px-3 py-1.5 rounded-full text-sm font-medium bg-white/5 text-steel hover:bg-white/10 transition-colors">Water</button>
+          <button data-filter="flavoured-milk" class="filter-pill px-3 py-1.5 rounded-full text-sm font-medium bg-white/5 text-steel hover:bg-white/10 transition-colors">Flavoured Milk</button>
+        </div>
+      </div>
+
+      <!-- Shelf rows will be populated by JS -->
+      <div id="product-grid" class="space-y-6">
+        <!-- Products injected here -->
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section id="about" class="py-16 border-t border-white/5">
+    <div class="max-w-6xl mx-auto px-4">
+      <h2 class="font-display text-3xl font-bold mb-10">Why this fridge is colder than yours</h2>
+      <div class="grid md:grid-cols-2 gap-10">
+        <div class="space-y-4">
+          <h3 class="font-display text-xl font-semibold text-lime">The temperature</h3>
+          <p class="text-steel leading-relaxed">
+            Shelf sits at a steady 3°C. Most corner shops run 8–10°C because their compressors are tired. Ours isn’t. Drinks leave the fridge and hit the bag in under 90 seconds.
+          </p>
+          <p class="text-sm text-steel/70">Last calibrated: this morning.</p>
+        </div>
+        <div class="space-y-4">
+          <h3 class="font-display text-xl font-semibold text-tangerine">Who packs it</h3>
+          <p class="text-steel leading-relaxed">
+            Just me — Shoury. No warehouse, no night-shift crew. Orders come in, I pull from the fridge, bag them, and ride out. Average door-to-door: 28 minutes inside the 3 km radius.
+          </p>
+          <p class="text-sm text-steel/70">If the order is big, I text you an ETA.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact / Ticket -->
+  <section id="contact" class="py-16">
+    <div class="max-w-xl mx-auto px-4">
+      <div class="ticket rounded-xl p-8 sm:p-10 text-center space-y-5">
+        <h2 class="font-display text-2xl font-bold">Drop a line</h2>
+        <p class="text-steel text-sm">Orders, questions, or “do you have X?”</p>
+        <a href="mailto:shouryy59@gmail.com" class="inline-block font-display text-xl text-lime hover:underline">
+          shouryy59@gmail.com
+        </a>
+        <div class="grid grid-cols-2 gap-4 text-sm text-left max-w-xs mx-auto pt-4 border-t border-white/10">
+          <div>
+            <p class="text-steel/70 text-xs uppercase tracking-wide">Hours</p>
+            <p class="font-medium">11 AM – 11 PM</p>
+          </div>
+          <div>
+            <p class="text-steel/70 text-xs uppercase tracking-wide">Radius</p>
+            <p class="font-medium">3 km (Koramangala)</p>
+          </div>
+          <div>
+            <p class="text-steel/70 text-xs uppercase tracking-wide">Min order</p>
+            <p class="font-medium">₹80</p>
+          </div>
+          <div>
+            <p class="text-steel/70 text-xs uppercase tracking-wide">Payment</p>
+            <p class="font-medium">Cash / UPI</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-8 border-t border-white/5 text-center text-sm text-steel">
+    <p>ChillDrop · Koramangala · Built for one fridge and a scooter</p>
+  </footer>
+
+  <!-- Cart Drawer -->
+  <div id="cart-drawer" class="fixed inset-y-0 right-0 w-full max-w-md bg-ink border-l border-white/10 z-[60] transform translate-x-full transition-transform duration-300 ease-out flex flex-col shadow-2xl">
+    <div class="flex items-center justify-between p-4 border-b border-white/10">
+      <h3 class="font-display text-lg font-semibold">Your cart</h3>
+      <button id="close-cart" class="p-2 hover:bg-white/5 rounded-lg transition-colors" aria-label="Close cart">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-3">
+      <!-- items -->
+    </div>
+    <div id="cart-footer" class="p-4 border-t border-white/10 space-y-3 hidden">
+      <div class="flex justify-between font-display text-lg font-semibold">
+        <span>Total</span>
+        <span id="cart-total">₹0</span>
+      </div>
+      <button id="checkout-btn" class="w-full bg-tangerine text-ink font-semibold py-3 rounded-lg hover:bg-tangerine/90 transition-colors">
+        Place order (WhatsApp)
+      </button>
+      <p class="text-xs text-steel text-center">You’ll confirm address & payment on WhatsApp</p>
+    </div>
+    <div id="cart-empty" class="flex-1 flex flex-col items-center justify-center p-8 text-center">
+      <p class="text-steel text-lg mb-2">Your cart’s as empty as a fridge before restocking.</p>
+      <p class="text-sm text-steel/70">Go grab something from the shelf.</p>
+    </div>
+  </div>
+  <div id="cart-overlay" class="fixed inset-0 bg-black/50 z-[55] hidden opacity-0 transition-opacity"></div>
+
+  <!-- Product Preview Modal -->
+  <div id="preview-modal" class="fixed inset-0 z-[70] hidden">
+    <div class="modal-backdrop absolute inset-0"></div>
+    <div class="relative h-full flex items-center justify-center p-4">
+      <div class="bg-[#121c28] rounded-2xl max-w-lg w-full overflow-hidden border border-white/10 shadow-2xl">
+        <div class="relative h-72 bg-ink">
+          <canvas id="preview-canvas" class="w-full h-full"></canvas>
+          <button id="close-preview" class="absolute top-3 right-3 p-2 bg-black/40 hover:bg-black/60 rounded-full transition-colors" aria-label="Close">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+          <p class="absolute bottom-3 left-0 right-0 text-center text-xs text-steel">Drag to rotate · Hold to inspect</p>
+        </div>
+        <div class="p-5 space-y-4">
+          <div>
+            <h3 id="preview-name" class="font-display text-xl font-bold"></h3>
+            <p id="preview-meta" class="text-steel text-sm mt-0.5"></p>
+          </div>
+          <div class="flex items-center justify-between">
+            <span id="preview-price" class="font-display text-2xl font-bold text-lime"></span>
+            <button id="preview-add" class="bg-tangerine text-ink font-semibold px-5 py-2.5 rounded-lg hover:bg-tangerine/90 transition-colors">
+              Add to cart
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#1a2a3a] border border-white/10 text-cream px-5 py-3 rounded-lg shadow-xl z-[80] opacity-0 translate-y-4 transition-all duration-300 pointer-events-none">
+    <span id="toast-msg"></span>
+  </div>
+
+  <!-- Scripts -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
